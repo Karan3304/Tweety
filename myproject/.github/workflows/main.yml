@@ -1,0 +1,39 @@
+name: Django CI
+
+on:
+  push:
+    branches:
+      - main
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v2
+
+      - name: Set up Python
+        uses: actions/setup-python@v2
+        with:
+          python-version: '3.x'
+
+      - name: Install Dependencies
+        run: |
+          python -m venv venv
+          source venv/bin/activate
+          pip install -r requirements.txt
+
+      - name: Run Migrations
+        run: |
+          python manage.py migrate
+
+      - name: Build
+        run: |
+          python manage.py collectstatic --noinput
+
+      - name: Deploy to Heroku
+        uses: akhileshns/heroku-deploy@v3.0.1
+        with:
+          heroku_api_key: ${{ secrets.HEROKU_API_KEY }}
+          heroku_app_name: "your-heroku-app-name"
+          buildpack: heroku/python
